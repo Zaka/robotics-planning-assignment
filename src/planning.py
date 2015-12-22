@@ -8,11 +8,12 @@ from PIL import Image, ImageTk
 # Read image
 class MainWindow():
     def __init__(self):
-        self.data = mpimg.imread('../maze-images/laberinto-01.png')
+        self.data = mpimg.imread('../maze-images/maze-01.png')
         self.data = (self.data * 255).round().astype(np.uint8)
 
         # TODO: Transform the data to a 0, inf matrix. Where inf is
         # obstacle.
+        self.maze = self.getMap(self.data)
         
         self.width = self.data.shape[1]
         self.height = self.data.shape[0]
@@ -48,7 +49,8 @@ class MainWindow():
     def onLeftButton(self, event):
         # TODO: Mark as start of the path
         self.canvas.create_line(event.x, event.y,
-                                event.x + 1, event.y)
+                                event.x + 1, event.y,
+                                fill='red')
         print "Left button on", event.x, event.y
         # TODO: Fire the createPath method only if start and end are
         # defined
@@ -56,17 +58,28 @@ class MainWindow():
     def onRightButton(self, event):
         # TODO: Mark as the end of the path
         self.canvas.create_line(event.x, event.y,
-                                event.x + 1, event.y)
+                                event.x + 1, event.y,
+                                fill='green')
         print "Right button on", event.x, event.y
         # TODO: Fire the createPath method only if start and end are
         # defined
+
+    def getMap(self, data):
+        maze = np.full(shape = data.shape,
+                       fill_value = float('inf'))
+
+        for index, value in np.ndenumerate(self.data):
+            if value == 255:
+                maze[index] = 0
+
+        return maze
+                    
+            
 
         
 # TODO: Uncomment and indent        
 # if __name__ == '__main__':
 x=MainWindow()
-
-# TODO: Show image in a interactive window
 
 # TODO: Select start and goal
 
