@@ -9,9 +9,12 @@ from PIL import Image, ImageTk
 # Read image
 class MainWindow():
     def __init__(self):
+        self.startPoint = None
+        self.goalPoint = None
+        
         self.root = tk.Tk()
         
-        self.im = Image.open('../maze-images/maze-01.png')
+        self.im = Image.open('../maze-images/maze-01-color.png')
 
         self.photo = ImageTk.PhotoImage(image = self.im)
         
@@ -29,13 +32,13 @@ class MainWindow():
                               height = initSize['h'])
         self.frame.columnconfigure(0, weight = 1)
         self.frame.rowconfigure(0, weight = 1)
-        self.frame.pack(fill = BOTH, expand = 1)
+        self.frame.pack(fill = tk.BOTH, expand = 1)
         self.canvas = tk.Canvas(self.frame,
                                 bd = 0,
                                 highlightthickness = 0,
                                 width=initSize['w'],
                                 height=initSize['h'])
-        self.canvas.grid(row = 0, sticky = W+E+N+S)
+        self.canvas.grid(row = 0, sticky = tk.W + tk.E + tk.N + tk.S)
         self.canvas.place(x=0,y=0)
 
         # Mouse event handling
@@ -51,16 +54,21 @@ class MainWindow():
         self.root.mainloop()
                 
     def onLeftButton(self, event):
-        # TODO: Mark as start of the path
-        
         x = self.imgSize['width']*event.x / self.windowSize['width']
         y = self.imgSize['height']*event.y / self.windowSize['height']
 
-        self.im.putpixel((x,y), 230)
+        if self.maze[y][x] == float('inf'):
+            return
+        
+        # Mark as the end of the path
+        self.maze[y][x] = 'S'
+        self.startPoint = (x,y)
+        
+        beautifulRed = (168, 96, 113)
+        self.im.putpixel((x,y), beautifulRed)
 
         resized = self.im.resize((self.windowSize['width'],
-                                  self.windowSize['height']),
-                                 Image.ANTIALIAS)
+                                  self.windowSize['height']))
         
         self.photo = ImageTk.PhotoImage(image = resized)
         
@@ -69,19 +77,30 @@ class MainWindow():
         self.canvas.itemconfig(self.imageOnCanvas,
                                image = self.photo)
         self.root.update()
-        # TODO: Fire the createPath method only if start and end are
-        # defined
+
+        if self.startPoint and self.goalPoint:
+            self.createPath()
 
     def onRightButton(self, event):
-        # TODO: Mark as the end of the path
+        # Get point in image dimensions (instead of window dimension)
         x = self.imgSize['width']*event.x / self.windowSize['width']
         y = self.imgSize['height']*event.y / self.windowSize['height']
 
-        self.im.putpixel((x,y), 150)
+        if self.maze[y][x] == float('inf'):
+            return
+        
+        print "Mouse pressed at:", event.x, event.y
+        print "img coord:", x, y
+
+        # Mark as the end of the path
+        self.maze[y][x] = 'G'
+        self.goalPoint = (x,y)
+        
+        beautifulBlue = (113, 150, 176)
+        self.im.putpixel((x,y), beautifulBlue)
 
         resized = self.im.resize((self.windowSize['width'],
-                                  self.windowSize['height']),
-                                 Image.ANTIALIAS)
+                                  self.windowSize['height']))
         
         self.photo = ImageTk.PhotoImage(image = resized)
         
@@ -90,9 +109,9 @@ class MainWindow():
         self.canvas.itemconfig(self.imageOnCanvas,
                                image = self.photo)
         self.root.update()
-        
-        # TODO: Fire the createPath method only if start and end are
-        # defined
+
+        if self.startMarked and self.goalMarked:
+            self.createPath()
 
     def onResize(self, event):
         size = (event.width, event.height)
@@ -100,7 +119,7 @@ class MainWindow():
         self.windowSize['width'] = event.width
         self.windowSize['height'] = event.height
         
-        resized = self.im.resize(size,Image.ANTIALIAS)
+        resized = self.im.resize(size)
         self.photo = ImageTk.PhotoImage(resized)
         self.canvas.config(width = event.width,
                            height = event.height)
@@ -110,25 +129,33 @@ class MainWindow():
         self.root.update()
 
     def getMap(self, data):
-        maze = np.full(shape = data.size,
-                       fill_value = float('inf'))
+        maze = [[float('inf') for i in range(data.size[0])] for j in range(data.size[1])]
 
-        for i in np.ndindex(data.size):
-            if data.getpixel(i) == 255:
-                maze[index] = 0
+        for h in range(len(maze)):
+            for w in range(len(maze[0])):
+                print data.getpixel((w,h))
+                if data.getpixel((w,h)) == (255, 255, 255):
+                    maze[h][w] = 0
 
         return maze
-                    
-            
+
+    def printMaze(self, maze):
+        for l in maze:
+            for v in l:
+                print v,
+            print ''
+    
+    def createPath(self):
+        pass
 
         
 # TODO: Uncomment and indent        
 # if __name__ == '__main__':
 x=MainWindow()
 
-# TODO: Select start and goal
-
 # TODO: Plan the path
 
 # TODO: Draw the path over the image
 
+# TODO: Ensure that the map has only one start point and only one goal
+# point.
