@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import Tkinter
+import Tkinter as tk
 import matplotlib.image as mpimg
 import numpy as np
 from PIL import Image, ImageTk
@@ -18,20 +18,27 @@ class MainWindow():
         self.width = self.data.shape[1]
         self.height = self.data.shape[0]
 
-        self.root = Tkinter.Tk()
-        self.frame = Tkinter.Frame(self.root,
+        self.root = tk.Tk()
+        self.frame = tk.Frame(self.root,
                                    width=self.width,
                                    height=self.height)
-        self.frame.pack()
-        self.canvas = Tkinter.Canvas(self.frame,
-                                     width=self.width,
-                                     height=self.width)
+        self.frame.columnconfigure(0, weight = 1)
+        self.frame.rowconfigure(0, weight = 1)
+        self.frame.pack(fill = BOTH, expand = 1)
+        self.canvas = tk.Canvas(self.frame,
+                                bd = 0,
+                                highlightthickness = 0,
+                                width=self.width,
+                                height=self.width)
+        self.canvas.grid(row = 0, sticky = W+E+N+S)
         # self.canvas.place(x=-2,y=-2)
         self.canvas.place(x=0,y=0)
 
         # Mouse event handling
         self.root.bind('<Button-1>', self.onLeftButton)
         self.root.bind('<Button-3>', self.onRightButton)
+        # Resize event handling
+        self.frame.bind('<Configure>', self.onResize)
         
         self.root.after(0,self.start)
         self.root.mainloop()
@@ -43,7 +50,7 @@ class MainWindow():
         self.photo = ImageTk.PhotoImage(image=self.im)
         self.canvas.create_image(0,0,
                                  image=self.photo,
-                                 anchor=Tkinter.NW)
+                                 anchor=tk.NW)
         self.root.update()
 
     def onLeftButton(self, event):
@@ -63,6 +70,17 @@ class MainWindow():
         print "Right button on", event.x, event.y
         # TODO: Fire the createPath method only if start and end are
         # defined
+
+    def onResize(self, event):
+        size = (event.width, event.height)
+        resized = self.im.resize(size,Image.ANTIALIAS)
+        self.image = ImageTk.PhotoImage(resized)
+        self.canvas.config(width = event.width,
+                           height = event.height)
+        self.canvas.delete("IMG")
+        self.canvas.create_image(0, 0, image=self.image,
+                                  anchor=tk.NW, tags="IMG")
+        self.root.update()
 
     def getMap(self, data):
         maze = np.full(shape = data.shape,
