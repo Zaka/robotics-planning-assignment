@@ -11,22 +11,17 @@ class MainWindow():
     def __init__(self):
         self.startPoint = None
         self.goalPoint = None
-        
         self.root = tk.Tk()
         
         self.im = Image.open('../maze-images/maze-01.png')
-
         self.photo = ImageTk.PhotoImage(image = self.im)
-        
         self.imgSize = { 'width' : self.photo.width(),
                          'height' : self.photo.height() }
         
         self.windowSize = dict(self.imgSize)
-        
         self.maze = self.getMap(self.im.getdata())
 
         initSize = { 'w' : 400, 'h' : 400 }
-        
         self.frame = tk.Frame(self.root,
                               width = initSize['w'],
                               height = initSize['h'])
@@ -159,6 +154,9 @@ class Maze():
                (-1, -1) : 1.4142135623730951}
 
     def __init__(self, imgData = []):
+        self.start = None
+        self.goal = None
+        
         if imgData:
             self.data = [[float('inf') for i in range(imgData.size[0])]
                          for j in range(imgData.size[1])]
@@ -173,57 +171,111 @@ class Maze():
     def setStart(self, start):
         if self.isEmpty(start):
             self.start = start
+            self.setPoint(self.start, 'S')
+
+    def setGoal(self, goal):
+        if self.isEmpty(goal):
+            self.goal = goal
+            self.setPoint(self.goal, 'G')
 
     def isEmpty(self, point):
         """Point exists and is not an obstacle.
         """
         return ( self.exists(point) and
-                 self.getPoint(start) != float('inf') )
+                 self.getPoint(point) == None )
     
     def exists(self, point):
         return not ( point[0] < 0 or
                      point[1] < 0 or
-                     point[0] >= len(self.data) or
-                     point[1] >= len(self.data[0]) )
+                     point[0] >= len(self.data[0]) or
+                     point[1] >= len(self.data) )
 
+    def setPoint(self, t, v):
+        self.data[t[1]][t[0]] = v
+        
     def getPoint(self, t):
         return self.data[t[1]][t[0]]
     
-    def computeDistanceToNeighbours(self, p):
+    def computeDistanceToNeighbours(self, refPoint):
         """Compute the minimum distance to neighbours and store it in the
         maze. If the point is surrounded by Non-Distances(None, inf or
-        'S'), then the value is None. :param: p Tuple representing the
+        'S'), then the value is None. :param: refPoint Tuple representing the
         point
         """
         minDistance = float('inf')
                             
         for d in Maze.DIR:
-            nextPoint = tuple(map(sum, zip(d, p)))
+            nextPoint = tuple(map(sum, zip(d, refPoint)))
 
-            neighbourValue = self.getPoint(nextPoint)
+            if self.exists(nextPoint):
+                neighbourValue = self.getPoint(nextPoint)
             
-            if ( self.exists(nextPoint) and
-                 neighbourValue != None and
-                 neighbourValue != 'S' ):
-                if neighbourValue == 'G':
-                    distanceToNeighbour = Maze.DIRCOST[d]
-                else:
-                    distanceToNeighbour = (self.getPoint(nextPoint) + 
-                                           Maze.DIRCOST[d])
-                            
-                if (distanceToNeighbour != float('inf') and
-                    distanceToNeighbour < minDistance):
-                    minDistance = distanceToNeighbour
+                if ( neighbourValue != None and
+                     neighbourValue != 'S' ):
+                    if neighbourValue == 'G':
+                        distanceToNeighbour = Maze.DIRCOST[d]
+                    else:
+                        distanceToNeighbour = (self.getPoint(nextPoint) + 
+                                               Maze.DIRCOST[d])
+
+                    if (distanceToNeighbour != float('inf') and
+                        distanceToNeighbour < minDistance):
+                        minDistance = distanceToNeighbour
 
         if minDistance == float('inf'):
             return None
         else:
             return minDistance
 
-    def computePathToGoal(self, p):
-        self.pathToGoal = []
+    def selectNeighbours(self, p):
+        """Select neighbours of p Neighbours are empty spots or neighbours
+        that have a value greater than p value + direction cost.
+        """
+        neighbours = []
+        currentPointValue = self.getPoint(p)
+
+        if currentPointValue == 'G':
+            currentPointValue = 0
+        elif currentPointValue == 'S':
+            currentPointValue = float('inf')
             
-                    
+        for d in Maze.DIR:
+            candidate = tuple(map(sum, zip(d, p)))
+
+            if self.exists(candidate):
+                candidateValue = self.getPoint(candidate)
+
+                if self.isEmpty(candidate):
+                    neighbours.append(candidate)
+                elif (candidateValue != 'G' and
+                      candidateValue != 'S' and
+                      self.getPoint(candidate) != float('inf') and
+                      candidateValue > currentPointValue + Maze.DIRCOST[d]):
+                    neighbours.append(candidate)
+
+        return neighbours
+        
+    def computeDistanceMatrix(self):
+        if ( self.start == None or
+             self.goal == None ):
+            return
+
+
+        
+        neighbours = set([])
+        neighbours |= set(self.selectNeighbours(self.goal))
+
+        while neighbours:
+            nextNeighbour = neighbours.pop()
+
+            # pdb.set_trace()
+
+            self.setPoint(nextNeighbour,
+                          self.computeDistanceToNeighbours(nextNeighbour))
+            
+            neighbours |= set(self.selectNeighbours(nextNeighbour))
+
+        
     def printMaze(self):
         for l in self.data:
             for v in l:
