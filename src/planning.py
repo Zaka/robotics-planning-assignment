@@ -9,8 +9,6 @@ from PIL import Image, ImageTk
 # Read image
 class MainWindow():
     def __init__(self):
-        self.startPoint = None
-        self.goalPoint = None
         self.root = tk.Tk()
         
         self.im = Image.open('../maze-images/maze-01.png')
@@ -19,7 +17,7 @@ class MainWindow():
                          'height' : self.photo.height() }
         
         self.windowSize = dict(self.imgSize)
-        self.maze = self.getMap(self.im.getdata())
+        self.maze = Maze(self.im)
 
         initSize = { 'w' : 400, 'h' : 400 }
         self.frame = tk.Frame(self.root,
@@ -39,25 +37,25 @@ class MainWindow():
         # Mouse event handling
         self.root.bind('<Button-1>', self.onLeftButton)
         self.root.bind('<Button-3>', self.onRightButton)
+        self.root.bind('<space>', self.onSpace)
         # Resize event handling
         self.frame.bind('<Configure>', self.onResize)
+        # Space event handling
 
         self.imageOnCanvas = self.canvas.create_image(0,0,
                                  image = self.photo,
                                  anchor=tk.NW)
-    
         self.root.mainloop()
                 
     def onLeftButton(self, event):
-        x = self.imgSize['width']*event.x / self.windowSize['width']
-        y = self.imgSize['height']*event.y / self.windowSize['height']
+        x = self.imgSize['width'] * event.x / self.windowSize['width']
+        y = self.imgSize['height'] * event.y / self.windowSize['height']
 
-        if self.maze[y][x] == float('inf'):
+        if self.maze.getPoint((y, x)) == float('inf'):
             return
         
         # Mark as the end of the path
-        self.maze[y][x] = 'S'
-        self.startPoint = (x,y)
+        self.maze.setStart((x,y))
         
         beautifulRed = (168, 96, 113)
         self.im.putpixel((x,y), beautifulRed)
@@ -73,27 +71,47 @@ class MainWindow():
                                image = self.photo)
         self.root.update()
 
-        if self.startPoint and self.goalPoint:
-            self.createPath()
-
     def onRightButton(self, event):
         # Get point in image dimensions (instead of window dimension)
         x = self.imgSize['width']*event.x / self.windowSize['width']
         y = self.imgSize['height']*event.y / self.windowSize['height']
 
-        if self.maze[y][x] == float('inf'):
+        if self.maze.getPoint((y, x)) == float('inf'):
             return
         
-        print "Mouse pressed at:", event.x, event.y
-        print "img coord:", x, y
-
         # Mark as the end of the path
-        self.maze[y][x] = 'G'
-        self.goalPoint = (x,y)
+        self.maze.setGoal((x,y))
         
         beautifulBlue = (113, 150, 176)
         self.im.putpixel((x,y), beautifulBlue)
 
+        resized = self.im.resize((self.windowSize['width'],
+                                  self.windowSize['height']))
+        
+        self.photo = ImageTk.PhotoImage(image = resized)
+
+        self.canvas.config(width = self.windowSize['width'],
+                           height = self.windowSize['height'])
+        self.canvas.itemconfig(self.imageOnCanvas,
+                               image = self.photo)
+        self.root.update()
+
+    def onSpace(self, event):
+        print "Space"
+        
+        if ( self.maze.getStart() == None or
+             self.maze.getGoal() == None ):
+            return
+
+        self.maze.computeDistanceMatrix()
+        
+        shortestPath = self.maze.getShortestPath()
+        
+        green = (111, 163, 128)
+        
+        for pixel in shortestPath:
+            self.im.putpixel(pixel, green)
+            
         resized = self.im.resize((self.windowSize['width'],
                                   self.windowSize['height']))
         
@@ -104,10 +122,7 @@ class MainWindow():
         self.canvas.itemconfig(self.imageOnCanvas,
                                image = self.photo)
         self.root.update()
-
-        if self.startMarked and self.goalMarked:
-            self.createPath()
-
+        
     def onResize(self, event):
         size = (event.width, event.height)
         
@@ -122,27 +137,6 @@ class MainWindow():
         self.canvas.create_image(0, 0, image=self.photo,
                                   anchor=tk.NW, tags="IMG")
         self.root.update()
-
-    def getMap(self, data):
-        maze = [[float('inf') for i in range(data.size[0])]
-                for j in range(data.size[1])]
-
-        for h in range(len(maze)):
-            for w in range(len(maze[0])):
-                print data.getpixel((w,h))
-                if data.getpixel((w,h)) == (255, 255, 255):
-                    maze[h][w] = 0
-
-        return maze
-
-    def printMaze(self, maze):
-        for l in maze:
-            for v in l:
-                print v,
-            print ''
-    
-    def createPath(self):
-        pass
 
 class Maze():
     DIR = [(0,1), (0,-1), (1,0), (1,1),
@@ -178,6 +172,12 @@ class Maze():
         if self.isEmpty(goal):
             self.goal = goal
             self.setPoint(self.goal, 'G')
+
+    def getStart(self):
+        return self.start
+
+    def getGoal(self):
+        return self.goal
 
     def isEmpty(self, point):
         """Point exists and is not an obstacle.
@@ -291,9 +291,6 @@ class Maze():
             for d in Maze.DIR:
                 candidate = tuple(map(sum, zip(d, currentPoint)))
 
-                # if candidate == (4, 5):
-                #     pdb.set_trace()
-                
                 if self.exists(candidate):
                     candidateValue = self.getPoint(candidate)
 
@@ -313,10 +310,8 @@ class Maze():
                 print v,
             print
 
-if __name__ == '__main__':
-    x = MainWindow()
-
-# TODO: Plan the path
+#if __name__ == '__main__':
+x = MainWindow()
 
 # TODO: Draw the path over the image
 

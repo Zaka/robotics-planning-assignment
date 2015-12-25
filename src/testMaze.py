@@ -284,6 +284,23 @@ class TestMaze(unittest.TestCase):
         self.assertListAlmostEqual(expectedDistanceMatrix,
                                    maze.data)
 
+        
+
+    @unittest.skip("")
+    def testComputeDistanceMatrix(self):
+        """Test the computation of a maze with a concave hurdle.
+        """
+        maze = Maze([])
+        maze.data = self.expectedMazeData
+        maze.setGoal((15, 12))
+        maze.setStart((5, 9))
+        maze.computeDistanceMatrix()
+
+        pdb.set_trace()
+
+        self.assertListAlmostEqual(expectedDistanceMatrix,
+                                   maze.data)
+        
     # @unittest.skip("")
     def testGetShortestPath(self):
         """Test the computation of a maze with a concave hurdle.
@@ -306,5 +323,5 @@ class TestMaze(unittest.TestCase):
         self.assertEqual(expectedPath,
                          maze.getShortestPath())
         
-if __name__ == '__main__':
-    unittest.main()
+#if __name__ == '__main__':
+unittest.main()
