@@ -85,7 +85,6 @@ class TestMaze(unittest.TestCase):
         self.assertEqual('S',
                          maze.getPoint((5, 6)))
             
-            
     def testComputeDistanceToNeighbours01(self):
         """Compute a point in the middle of empty neighbours
         """
@@ -123,9 +122,6 @@ class TestMaze(unittest.TestCase):
         maze.setGoal((1, 3))
 
         for elem in testList:
-            # if elem['point'] == (0, 4):
-            #     pdb.set_trace()
-                
             self.assertAlmostEqual( elem['expectedDistance'],
                                     maze.computeDistanceToNeighbours(elem['point']),
                                     places = 14,
@@ -279,21 +275,36 @@ class TestMaze(unittest.TestCase):
                                   [2.414213562373095,  2.8284271247461903, 3.8284271247461903, 4.82842712474619,  5.82842712474619,  6.82842712474619],  
                                   [3.414213562373095,  3.8284271247461903, 4.242640687119286,  5.242640687119286, 6.242640687119286, 'S' ]]
 
-        # TODO: Fails because the algorithm iterates only once, and
-        # obtains the first value but doesn't try to get a better one.
-        # Has to be corrected.
-
         maze = Maze([])
         maze.data = self.testDistanceMatrix
         maze.setGoal((1,3))
         maze.setStart((5, 6))
-
         maze.computeDistanceMatrix()
 
-        pdb.set_trace()
-                
         self.assertListAlmostEqual(expectedDistanceMatrix,
                                    maze.data)
 
+    # @unittest.skip("")
+    def testGetShortestPath(self):
+        """Test the computation of a maze with a concave hurdle.
+        """
+        data = [[3.414213562373095,  3.8284271247461903, 4.242640687119286,  5.242640687119286, 6.242640687119286, 7.242640687119286], 
+                [2.414213562373095,  2.8284271247461903, 3.8284271247461903, 4.82842712474619,  5.82842712474619,  6.82842712474619],  
+                [1.4142135623730951, float('inf'),       float('inf'),       5.242640687119286, 6.242640687119286, 7.242640687119286], 
+                [1,                  None,               float('inf'),       6.242640687119286, 6.656854249492381, 7.656854249492381], 
+                [1.4142135623730951, float('inf'),       float('inf'),       5.242640687119286, 6.242640687119286, 7.242640687119286], 
+                [2.414213562373095,  2.8284271247461903, 3.8284271247461903, 4.82842712474619,  5.82842712474619,  6.82842712474619],  
+                [3.414213562373095,  3.8284271247461903, 4.242640687119286,  5.242640687119286, 6.242640687119286, None ]]
+
+        expectedPath = [(4, 5), (3, 5), (2, 5), (1, 5), (0, 4)]
+        
+        maze = Maze([])
+        maze.data = data
+        maze.setGoal((1,3))
+        maze.setStart((5, 6))
+
+        self.assertEqual(expectedPath,
+                         maze.getShortestPath())
+        
 if __name__ == '__main__':
     unittest.main()

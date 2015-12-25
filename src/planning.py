@@ -124,7 +124,8 @@ class MainWindow():
         self.root.update()
 
     def getMap(self, data):
-        maze = [[float('inf') for i in range(data.size[0])] for j in range(data.size[1])]
+        maze = [[float('inf') for i in range(data.size[0])]
+                for j in range(data.size[1])]
 
         for h in range(len(maze)):
             for w in range(len(maze[0])):
@@ -260,21 +261,51 @@ class Maze():
              self.goal == None ):
             return
 
-
-        
         neighbours = set([])
         neighbours |= set(self.selectNeighbours(self.goal))
 
         while neighbours:
             nextNeighbour = neighbours.pop()
 
-            # pdb.set_trace()
-
             self.setPoint(nextNeighbour,
                           self.computeDistanceToNeighbours(nextNeighbour))
             
             neighbours |= set(self.selectNeighbours(nextNeighbour))
 
+    def getShortestPath(self):
+        if ( self.start == None or
+             self.goal == None ):
+            return
+
+        path = []
+        currentPoint = self.start
+        bestCandidate = []
+        while True:
+            if bestCandidate != []:
+                currentPoint = bestCandidate
+                path.append(bestCandidate)                
+
+            bestCandidate = []
+            bestCandidateValue = float('inf')
+            
+            for d in Maze.DIR:
+                candidate = tuple(map(sum, zip(d, currentPoint)))
+
+                # if candidate == (4, 5):
+                #     pdb.set_trace()
+                
+                if self.exists(candidate):
+                    candidateValue = self.getPoint(candidate)
+
+                    if candidateValue == 'G':
+                        return path
+
+                    if ( candidateValue != 'S' and
+                         candidateValue < bestCandidateValue ):
+                        bestCandidateValue = candidateValue
+                        bestCandidate = candidate
+
+        return path
         
     def printMaze(self):
         for l in self.data:
@@ -283,7 +314,7 @@ class Maze():
             print
 
 if __name__ == '__main__':
-    x=MainWindow()
+    x = MainWindow()
 
 # TODO: Plan the path
 
