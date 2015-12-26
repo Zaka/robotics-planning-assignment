@@ -11,7 +11,7 @@ class MainWindow():
     def __init__(self):
         self.root = tk.Tk()
         
-        self.im = Image.open('../maze-images/maze-01.png')
+        self.im = Image.open('../maze-images/maze-03.png')
         self.photo = ImageTk.PhotoImage(image = self.im)
         self.imgSize = { 'width' : self.photo.width(),
                          'height' : self.photo.height() }
@@ -19,6 +19,8 @@ class MainWindow():
         self.windowSize = dict(self.imgSize)
         self.maze = Maze(self.im)
 
+        # pdb.set_trace()
+        
         initSize = { 'w' : 400, 'h' : 400 }
         self.frame = tk.Frame(self.root,
                               width = initSize['w'],
@@ -51,7 +53,7 @@ class MainWindow():
         x = self.imgSize['width'] * event.x / self.windowSize['width']
         y = self.imgSize['height'] * event.y / self.windowSize['height']
 
-        if self.maze.getPoint((y, x)) == float('inf'):
+        if self.maze.getPoint((x, y)) == float('inf'):
             return
         
         # Mark as the end of the path
@@ -73,10 +75,10 @@ class MainWindow():
 
     def onRightButton(self, event):
         # Get point in image dimensions (instead of window dimension)
-        x = self.imgSize['width']*event.x / self.windowSize['width']
-        y = self.imgSize['height']*event.y / self.windowSize['height']
+        x = self.imgSize['width'] * event.x / self.windowSize['width']
+        y = self.imgSize['height'] * event.y / self.windowSize['height']
 
-        if self.maze.getPoint((y, x)) == float('inf'):
+        if self.maze.getPoint((x, y)) == float('inf'):
             return
         
         # Mark as the end of the path
