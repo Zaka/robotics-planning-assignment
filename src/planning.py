@@ -2,8 +2,6 @@
 
 import pdb
 import Tkinter as tk
-import matplotlib.image as mpimg
-import numpy as np
 from PIL import Image, ImageTk
 
 # Read image
@@ -11,7 +9,7 @@ class MainWindow():
     def __init__(self):
         self.root = tk.Tk()
         
-        self.im = Image.open('../maze-images/maze-03.png')
+        self.im = Image.open('../maze-images/maze-02.png')
         self.photo = ImageTk.PhotoImage(image = self.im)
         self.imgSize = { 'width' : self.photo.width(),
                          'height' : self.photo.height() }
