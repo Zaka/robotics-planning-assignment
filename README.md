@@ -18,7 +18,7 @@ a red pixel.
 Press right mouse button to set the **goal**, which is marked as a
 blue pixel.
 
-![Setting star & goal](file:https://github.com/Zaka/robotics-planning-assignment/blob/master/set-start-and-goal.png)
+![Setting star & goal](https://github.com/Zaka/robotics-planning-assignment/blob/master/set-start-and-goal.png)
 
 Press Space key to compute the path
 
